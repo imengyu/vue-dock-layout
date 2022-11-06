@@ -1,0 +1,6 @@
+export * from './src/DockLayout.vue'
+export * from './src/DockHostData'
+export * from './src/DockLayoutData'
+export * from './src/DockPanelDefaultTab.vue'
+export * from './src/DockPanelHost.vue'
+export * from './src/DockSplit.vue'
