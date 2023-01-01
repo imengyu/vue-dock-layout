@@ -50,7 +50,7 @@
 
 <script lang="ts">
 import { ComponentPublicInstance, defineComponent, renderSlot } from 'vue';
-import { DockData, DockDirection, DockPanel, IDockGrid, IDockPanel } from './DockLayoutData';
+import { DockData, DockDirection, DockPanel, DockRootData, IDockGrid, IDockPanel } from './DockLayoutData';
 import DockDropLayout from './DockDropLayout.vue';
 import DockSplit from './DockSplit.vue';
 import DynamicRender from './DynamicRender.vue';
@@ -97,7 +97,7 @@ export default defineComponent({
   data() {
     return {
       dockPanels: new Map<string, DockPanel>(),
-      dockData: new DockData(),
+      dockData: new DockRootData(),
       needRemovePanels: new Array<string>(),
       isDragging: false,
       mainLayout: null as unknown | null,
@@ -191,7 +191,7 @@ export default defineComponent({
     insertPanel(grid: DockData , panel: DockPanel) {
       if (grid?.addPanel(panel))
         this.onActiveTabChange(grid, null, grid.activeTab);
-      this.forceFlushAllPanelPos(grid);
+      this.forceFlushAllPanelPos();
     },
     /**
      * 递归查找最后一级子级
@@ -249,19 +249,17 @@ export default defineComponent({
      * @public
      * @param grid 面板
      */
-    forceFlushAllPanelPos(grid : DockData|null) {
+    forceFlushAllPanelPos() {
       if (this.flushPosLock)
         return;
       this.flushPosLock = true;
       setTimeout(() => {
         const el = this.$refs.mainLayout as ComponentPublicInstance;
         const rect = new Rect(0, 0, el.$el.clientWidth, el.$el.clientHeight);
-        if(this.dockData != grid) {
-          this.dockData.lastLayoutSize.set(rect);
-          this.loopUpdateChildPanelPosition(this.dockData as DockData, rect);
-        }
+        this.dockData.lastLayoutSize.set(rect);
+        this.loopUpdateChildPanelPosition(this.dockData as DockData, rect);
         this.flushPosLock = false;
-      }, 100);
+      }, 40);
     },
 
     //#endregion 
@@ -282,7 +280,7 @@ export default defineComponent({
     //#region 检测大小更改
 
     onSizeChanged() {
-      this.forceFlushAllPanelPos(null);
+      this.forceFlushAllPanelPos();
     },
     //检测大小更改
     checkSizeChangedTick() {
@@ -325,11 +323,16 @@ export default defineComponent({
       const dropCurrentRegionParent = this.dropCurrentRegion.parent; 
 
       //跨网格移动，需要先从之前的网格移出来
-      const parent = currentPanel.parent;  
-      if(parent && parent !== this.dropCurrentRegion) {
+      const parent = currentPanel.parent;
+
+      if(parent) {
         let needFlushTabActive = parent.removePanel(currentPanel);//在原来的容器中移除
-        if(needFlushTabActive) this.onActiveTabChange(parent, null, parent.activeTab as DockPanel);
-        this.checkAndRemoveEmptyGrid(parent);
+        if(needFlushTabActive)
+          this.onActiveTabChange(parent, null, parent.activeTab as DockPanel);
+       
+        const useAbleParent = this.checkAndRemoveEmptyGrid(parent); //检查容器嵌套情况并整理
+        if (this.dropCurrentRegion.isIsolated()) // 如果目标插入容器已经被移除，则设置为其他可用容器
+          this.dropCurrentRegion = useAbleParent;
       }
 
       //是放置在网格中
@@ -349,7 +352,7 @@ export default defineComponent({
             this.dropCurrentRegion.addPanel(currentPanel);
             this.dropCurrentRegion.activeTab = currentPanel;
             this.onActiveTabChange(this.dropCurrentRegion as DockData, lastActiveTab, currentPanel);
-            this.onGridDropFinish(this.dropCurrentRegion as DockData);
+            this.onGridDropFinish();
           }
           break;
         case 'top': 
@@ -379,6 +382,7 @@ export default defineComponent({
             this.reGridRegion(dropCurrentRegionParent as DockData, 'horizontal', currentPanel, parent);
           break;
       }
+
 
       this.dropStyleRegion.set(0,0,0,0);
       this.dropStyleRegionInTab.set(0,0,0,0);
@@ -440,8 +444,8 @@ export default defineComponent({
         this.loopUpdateChildPanelPosition(nextGrid, nextGrid.lastLayoutSize);
     },
     //拖动完成
-    onGridDropFinish(grid : DockData) {
-      this.forceFlushAllPanelPos(grid);
+    onGridDropFinish() {
+      this.forceFlushAllPanelPos();
     },
     //切换显示状态
     onActiveTabChange(grid : DockData, lastActive : DockPanel|null, currentActive : DockPanel|null) {
@@ -460,7 +464,7 @@ export default defineComponent({
         this.$emit('tab-closed', panel);
         this.onActiveTabChange(parent, null, parent.activeTab as DockPanel);//移除后，重新选择
         this.checkAndRemoveEmptyGrid(parent);//移除后，检查整理相关网格
-        this.forceFlushAllPanelPos(parent); //移除后，强制刷新一下大小
+        this.forceFlushAllPanelPos(); //移除后，强制刷新一下大小
       } else {
         console.error(`[DockLayout] Failed to close tab ${panel.key}, mabe it already closed.`);
       }
@@ -492,27 +496,31 @@ export default defineComponent({
       }, 200);
     },
     //检查网格是否为空，为空则进行合并整理
-    checkAndRemoveEmptyGrid(data : DockData) {
+    checkAndRemoveEmptyGrid(data : DockData) : DockData {
       if (data.alwaysVisible)
-        return;
+        return data;
       if (data.grids.length == 0 && data.panels.length == 0) {
+        //当前网格是一个空壳，直接移除
         let parent = data.parent; 
         if(parent) {
           parent.removeGrid(data);
-          this.checkAndRemoveEmptyGrid(parent);
+          return this.checkAndRemoveEmptyGrid(parent);
         }
       } else if (data.grids.length == 1 && data.panels.length == 0) { 
-        //只有一个网格了，合并重复的
+        //只有一个网格了，将子级合并到自己
         let child = data.grids[0];
         data.panels = child.panels;
         data.grids = child.grids;
+        child.parent = null;
+        child.panels = [];
+        child.grids = [];
         data.resetPanelsParent();
         data.resetGridsParent();
 
-        //递归继续合并子级的数据
-        if(data) 
-          this.checkAndRemoveEmptyGrid(data);
+        if (data.parent)
+          this.checkAndRemoveEmptyGrid(data.parent);
       } 
+      return data;
     },
     //重新进行网格布局
     reGridRegion(grid : DockData, driection : 'vertical'|'horizontal', currentPanel : DockPanel, panelOldParent: DockData|null) {
@@ -526,11 +534,15 @@ export default defineComponent({
         let newRegionOne = grid, newRegionTwo = new DockData();
         newRegionTwo.inhertProps(inhertPropsParent);
         newRegionTwo.setDirectionByParent(grid);//继承之前的网格设置
-        newRegionTwo.addPanel(currentPanel);
+        newRegionTwo.name = grid.name + '-' + driection + '-split2';
+
+        let oldActiveTabOne = newRegionOne.activeTab;
+        let oldActiveTabTwo = newRegionTwo.activeTab;
 
         if(grid.panels.length > 0) {
           //拆分网格并重构层级
           newRegionOne = new DockData();
+          newRegionOne.name = grid.name + '-' + driection + '-split1';
           newRegionOne.panels = grid.panels;
           newRegionOne.inhertProps(grid);
           newRegionOne.resetPanelsParent();
@@ -540,8 +552,9 @@ export default defineComponent({
           //添加拆分的网格
           grid.addGrid(newRegionOne);
           grid.addGrid(newRegionTwo, isLeftDir ? 0 : undefined);
-          this.onGridDropFinish(newRegionOne);
-          this.onGridDropFinish(newRegionTwo);
+
+          if (grid.parent)
+            this.checkAndRemoveEmptyGrid(grid.parent);//移除后，检查整理相关网格
         } else {
           //这本来就是网格，可直接添加，不需要拆分
           const index = grid.grids.indexOf(this.dropCurrentRegion as DockData);
@@ -550,15 +563,14 @@ export default defineComponent({
           else
             grid.addGrid(newRegionTwo, isLeftDir ? index : index + 1)
           
-          this.onGridDropFinish(newRegionTwo);
         }
 
-        let oldActiveTabOne = newRegionOne.activeTab;
-        let oldActiveTabTwo = newRegionTwo.activeTab;
 
         newRegionOne.activeTab = oldActiveTab;
+        newRegionTwo.addPanel(currentPanel);
         newRegionTwo.activeTab = currentPanel;
         
+        this.onGridDropFinish();
         this.onActiveTabChange(newRegionOne, oldActiveTabOne, oldActiveTab as DockPanel);
         this.onActiveTabChange(newRegionTwo, oldActiveTabTwo, currentPanel);
       } else if(grid.parent) { //方向不同，直接推到父级去
@@ -769,6 +781,7 @@ export default defineComponent({
       data.acceptPanelTags = src.acceptPanelTags || [];
       data.tabStyle = src.tabStyle || {};
       data.tabItemStyle = src.tabItemStyle || {};
+      data.allowIsolated = true;
 
       src?.grids?.forEach((g) => {
         const newData = new DockData();
@@ -776,6 +789,9 @@ export default defineComponent({
         this.loadDockData(newData, g, direction === 'vertical' ? 'horizontal' : 'vertical');
         data.addGrid(newData, undefined, true);
       });
+
+      if (data.name !== 'root')
+        data.allowIsolated = false;
     },
     //对面板数据进行处理
     loadDockDataPanels(data : DockData, src : IDockGrid) {

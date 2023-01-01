@@ -11,7 +11,7 @@ $light-theme-tab-mormal-color: #e0e0e0;
 $light-theme-tab-active-color: #fff;
 $light-theme-tab-border-color: #d8d8d8;
 $light-theme-tab-button-normal-color: #cccccc;
-$light-theme-tab-button-hover-color:  #7e7e7e;
+$light-theme-tab-button-hover-color: #7e7e7e;
 
 $tab-height: 35px;
 
@@ -60,4 +60,20 @@ $tab-height: 35px;
       background: transparent;
     }
   }
+}
+
+/* Debug */
+
+$debug-color:  #d32a00;
+
+.dock-debug {
+  position: absolute;
+  top: $tab-height + 2px;
+  left: 2px;
+  padding: 1px;
+  font-size: 10px;
+  border: 1px solid $debug-color;
+  color: $debug-color;
+  background-color: #fff;
+  z-index: 100;
 }

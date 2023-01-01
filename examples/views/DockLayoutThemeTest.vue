@@ -15,8 +15,8 @@
         <img src="https://imengyu.top/assets/images/test/1.jpg" />
       </template>
       <template v-else-if="panel.key==='panel4'">
-        <h1>Tab Content</h1>
-        <span>咏萤虞世南〔唐代〕<br>的历流光小，<br>飘飖弱翅轻。<br>恐畏无人识，<br>独自暗中明。</span>
+        <h1>咏萤</h1>
+        <span>虞世南〔唐代〕<br>的历流光小，<br>飘飖弱翅轻。<br>恐畏无人识，<br>独自暗中明。</span>
       </template>
       <template v-else-if="panel.key==='panel5'">
         <codemirror
@@ -28,6 +28,16 @@
           :tab-size="2"
           :extensions="extensions"
         />
+      </template>
+      <template v-else-if="panel.key==='panel6'">
+        <h1>题柳</h1>
+        <p>温庭筠〔唐代〕</p>
+
+        <p>杨柳千条拂面丝，绿烟金穗不胜吹。<br>
+        香随静婉歌尘起，影伴娇娆舞袖垂。<br>
+        羌管一声何处曲，流莺百啭最高枝。<br>
+        千门九陌花如雪，飞过宫墙两自知。<br>
+        </p>
       </template>
     </template>
     <template #emptyPanel="{ dockData }">
@@ -109,7 +119,11 @@ export default defineComponent({
       dockLayout.value?.addPanels([
         {
           key: 'panel4',
-          title: 'panel14',
+          title: '咏萤',
+        },
+        {
+          key: 'panel6',
+          title: '题柳',
         },
       ], 'right');
       dockLayout.value?.addPanel({

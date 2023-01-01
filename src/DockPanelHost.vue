@@ -1,5 +1,5 @@
 <template>
-  <div class="dock-tab">
+  <div class="dock-tab" :data-dock-name="dockData.name">
     <!--tab list-->
     <div 
       ref="tabScroll" 

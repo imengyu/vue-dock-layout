@@ -111,6 +111,7 @@ export function getTargetGridSize(nowLen: number) : number {
   return 14;
 }
 
+
 /**
  * 停靠容器数据
  */
@@ -174,8 +175,21 @@ export class DockData implements IDockGrid {
   startSize = 0;
   lastLayoutSize = new Rect();
   parent: DockData | null = null;
+  allowIsolated = false;
+
+  isIsolated() : boolean {
+    return this.parent === null;
+  }
 
   addPanel(panel: DockPanel, insertIndex?: number): boolean {
+    if (!this.allowIsolated && this.isIsolated()) {
+      console.error('addPanel on a isolated DockData', this.name);
+      return false;
+    }
+    if (panel.parent !== null && (panel.parent !== this)) {
+      console.error('Panel ' + panel.key + ' Not removed before adding, current parent', panel.parent, 'target parent', this.name);
+      return false;
+    }
     if (!this.panels.includes(panel)) {
       if (typeof insertIndex === 'number') this.panels.splice(insertIndex, 0, panel);
       else this.panels.push(panel);
@@ -191,16 +205,21 @@ export class DockData implements IDockGrid {
     const i = this.panels.indexOf(panel);
     if (i >= 0) {
       this.panels.splice(i, 1);
+      panel.parent = null;
       if (this.activeTab == panel) {
         //移除面板后，检查网格选中，如果选中项是移除的面板，则重新选中一个面板
         this.activeTab = this.panels[i >= this.panels.length ? this.panels.length - 1 : i];
         return true;
       }
-      panel.parent = null;
     }
     return false;
   }
   addGrid(grid: DockData, insertIndex?: number, forceSize = false): void {
+    if (!this.allowIsolated && this.isIsolated()) {
+      console.error('addGrid on a isolated DockData', this.name);
+      return;
+    }
+
     if (!this.grids.includes(grid)) {
 
       if (typeof insertIndex === 'number')
@@ -273,6 +292,17 @@ export class DockData implements IDockGrid {
       name: this.name,
       acceptPanelTags: this.acceptPanelTags,
     }
+  }
+}
+
+/**
+ * 停靠容器数据
+ */
+export class DockRootData extends DockData {
+
+  constructor() {
+    super();
+    this.allowIsolated = true;
   }
 }
 

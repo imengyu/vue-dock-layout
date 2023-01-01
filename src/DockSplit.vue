@@ -56,6 +56,10 @@ const DockSplit = defineComponent({
 
       const childVnode = new Array<VNode>();
 
+      if (dockData.grids.length > 0 && dockData.panels.length > 0) {
+        childVnode.push(h('div', { class: 'dock-debug' }, `Bad state for dockData ${dockData.name}, both grid and panel.`));
+      }
+
       //递归循环子级
       if (dockData.grids.length > 0) {
         //有子分隔板，所以递归渲染下一级
@@ -88,6 +92,7 @@ const DockSplit = defineComponent({
       //绘制容器
       childrens.push(h('div', {
         class: 'dock-split-host',
+        'data-dock-name': dockData.name,
         style: {
           width: this.direction === 'vertical' ? '100%' : thisSize + '%',
           height: this.direction === 'horizontal' ? '100%' : thisSize + '%',
