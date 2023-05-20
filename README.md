@@ -9,8 +9,6 @@ A dock layout component like `visual studio` for Vue3
 
 ---
 
-[Click here View Documentation](https://imengyu.top/pages/vue-dock-layout-doc/en)
-
 [Click here View online Demo](https://imengyu.top/pages/vue-dock-layout-demo/)
 
 ## Features
@@ -58,7 +56,7 @@ To use vue dock layout, you need to first add a container component to your inte
 </template>
 ```
 
-The layout of layout components is based on a grid layout, with each segmented area forming a grid, and your custom content is embedded in the grid.
+The layout of layout components is based on a grid layout, with each segmented area forming a grid, and your custom content is embedded in the grid as a panel.
 
 The component provides some interfaces that allow you to quickly set the interface layout programmatically:
 
@@ -68,7 +66,8 @@ const dockLayout = ref<DockLayoutInterface>();
 onMounted(() => {
   nextTick(() => {
     //Set the interface layout here first
-    //Here we have added a horizontal layout with three areas, left/center/right, with a width ratio of 20%: 60%: 20%
+    //Here we have added a horizontal layout with three areas, 
+    //left/center/right, with a width ratio of 20%: 60%: 20%
     //Then the left region is divided into two regions: leftA/leftB, with a width of 50%: 50%
     dockLayout.value?.setData({
       name: 'root',
@@ -91,7 +90,8 @@ onMounted(() => {
         {
           size: 60,
           name: 'center',
-          //Here we set that the center area will not be automatically removed when there is no panel
+          //Here we set that the center area will not be 
+          //automatically removed when there is no panel
           alwaysVisible: true,
         },
         {
@@ -100,8 +100,9 @@ onMounted(() => {
         },
       ],
     });
-    //The code below adds a content window to the panel
-    //Each content window is identified by a key, which can be read from the panel parameter in the panel render slot of DockLayout.
+    //The code below adds a content panel to the grid
+    //Each content panel is identified by a key, which can be read from the 
+    //panel parameter in the panel render slot of DockLayout.
     dockLayout.value?.addPanels([
       {
         key: 'panel1',
@@ -140,7 +141,7 @@ onBeforeUnmount(() => {
 
 #### Theme
 
-The component default provides two themes for you to use: light and dark. The theme can be specified using the 'theme' attribute of the 'DockLayout' component.
+The component default provides two themes for you to use: `light` and `dark`. The theme can be specified using the `theme` attribute of the `DockLayout` component.
 
 ```html
 <DockLayout ref="dockLayout" theme="light">
@@ -182,7 +183,7 @@ Custom rendering for panel titles.
 
 ##### emptyPanel
 
-This slot is used to render the backplane displayed when the panel has no content window.
+This slot is used to render the backplane displayed when the grid has no content panel.
 
 ```vue
 <DockLayout ref="dockLayout" class="full">
@@ -194,6 +195,126 @@ This slot is used to render the backplane displayed when the panel has no conten
   </template>
 </DockLayout>
 ```
+
+## API 参考
+
+DockLayout is the main container for layout components.
+
+##### Props
+
+| Name | description | type | default value |
+| :----: | :----: | :----: | :----: |
+| tabHeight | The height of the Tab component, used for related calculations | `number` | 40 |
+| startVerticalDirection | Is the first layout grid vertical? | `boolean` | `false` |
+| allowFloatWindow | Allow floating windows? | `boolean` | `false` |
+| theme | Theme, can be 'light' or 'dark' | `string` | `dark` |
+
+##### Events
+
+| Name | description | params |
+| :----: | :----: | :----: |
+| active-tab-change | Trigger event when the active content panel changes | `currentActive : DockPanel|null`,`lastActive : DockPanel|null` |
+| tab-closed | Trigger this event when the content panel is closed | `panel: DockPanel` |
+
+##### Slots
+
+| Name | description | params |
+| :----: | :----: | :----: |
+| emptyPanel | This slot is used to render panel titles. | { name: string, dockData: DockData } |
+| tabItemRender | This slot is used to render the backplane displayed when the grid has no content panel. | DockTabItemRenderData |
+
+##### Instance Function
+
+```ts
+//When using TS, you can use DockLayoutInterface to obtain code prompts
+const dockLayout = ref<DockLayoutInterface>();
+```
+
+###### `getSaveData() : IDockGrid`
+
+Explain:
+
+Obtain current interface grid layout data
+
+Return:
+
+grid layout data
+
+###### `setData(data: IDockGrid) : void`
+
+Explain:
+
+Set interface grid layout data
+
+| params | description |
+| :----: | :----: |
+| data | grid layout data |
+
+###### `updatePanel(panel: IDockPanel) : void`
+
+Explain:
+
+Update properties of panel instances
+
+| params | description |
+| :----: | :----: |
+| panel | Target panel |
+
+###### `addPanel(panel: IDockPanel, insertTo?: string|DockData) : void`
+
+Explain:
+
+Insert the panel into the container.
+
+* Note: If the panel key has already been inserted into the current container and `insertTo` is not empty, the panel will be moved to the operation, and the new panel properties will not change. You need to manually call `updatePanel` to update the properties.
+* Note: If `insertTo` is not empty, its grid container must first exist, otherwise the addition will fail.
+* `panel.key` cannot be empty.
+
+| params | description |
+| :----: | :----: |
+| panel | Target panel |
+| insertTo | Insert the panel into the grid with the specified name. If left blank, insert it into the top-level grid |
+
+###### `addPanels(panels: IDockPanel[], insertTo?: string|DockData) : void`
+
+Explain:
+
+Insert the panel into the container. Same as' addPanel ', but this function adds multiple panels at once.
+
+| params | description |
+| :----: | :----: |
+| panels | Panel array |
+| insertTo | Insert the panel into the grid with the specified name. If left blank, insert it into the top-level grid |
+
+###### `removePanel(key: string) : void`
+
+Explain:
+
+Remove specified panel
+
+| params | description |
+| :----: | :----: |
+| key | Target panel key |
+
+###### `removePanels(keys: string[]) : void`
+
+Explain:
+
+Remove multiple specified panels
+
+| params | description |
+| :----: | :----: |
+| keys | Target panel keys |
+
+###### `activePanel(key: string) : void`
+
+Explain:
+
+Activate the specified panel
+
+| params | description |
+| :----: | :----: |
+| key | Target panel key |
 
 ## Changelog
 

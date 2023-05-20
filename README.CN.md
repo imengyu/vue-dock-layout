@@ -7,8 +7,6 @@ vue-dock-layout
 
 ---
 
-[查看文档](https://imengyu.top/pages/vue-dock-layout-doc/zh)
-
 [查看在线示例](https://imengyu.top/pages/vue-dock-layout-demo/)
 
 > **本项目目前还处于早期发布阶段，可能会存在不少问题，如果遇到问题，欢迎在 [Github](https://github.com/imengyu/vue-dock-layout/issues) 提出 Issue，我会尽量为你解决！**
@@ -100,8 +98,8 @@ onMounted(() => {
         },
       ],
     });
-    //下方代码向面板添加内容窗口
-    //每个内容窗口以key作为标识符，在 DockLayout 的 panelRender 插槽中可以从 panel 参数中读取。
+    //下方代码向网格添加内容面板
+    //每个内容面板以key作为标识符，在 DockLayout 的 panelRender 插槽中可以从 panel 参数中读取。
     dockLayout.value?.addPanels([
       {
         key: 'panel1',
@@ -183,7 +181,7 @@ onBeforeUnmount(() => {
 
 ##### emptyPanel
 
-用于渲染面板没有内容窗口时显示的底板。
+用于渲染面板没有内容面板时显示的底板。
 
 ```vue
 <DockLayout ref="dockLayout" class="full">
@@ -195,6 +193,125 @@ onBeforeUnmount(() => {
   </template>
 </DockLayout>
 ```
+
+## API 参考
+
+DockLayout 是布局组件的主要容器。
+
+##### Props
+
+| 属性 | 描述 | 类型 | 默认值 |
+| :----: | :----: | :----: | :----: |
+| tabHeight | Tab组件的高度，用于相关计算 | `number` | 40 |
+| startVerticalDirection | 第一个布局网格是不是垂直的 | `boolean` | `false` |
+| allowFloatWindow | 是否允许浮动窗口 | `boolean` | `false` |
+| theme | 主题，可选 'light', 'dark' | `string` | `dark` |
+
+##### Events
+
+| 事件名 | 描述 | 参数 |
+| :----: | :----: | :----: |
+| active-tab-change | 当激活的内容面板更改时触发事件 | `currentActive : DockPanel|null`,`lastActive : DockPanel|null` |
+| tab-closed | 内容面板关闭时触发此事件 | `panel: DockPanel` |
+
+##### Slots
+
+| 插槽名 | 描述 | 参数 |
+| :----: | :----: | :----: |
+| emptyPanel | 用于面板标题的自定义渲染 | { name: string, dockData: DockData } |
+| tabItemRender | 用于渲染网格没有内容面板时显示的底板 | DockTabItemRenderData |
+
+##### 方法
+
+```ts
+//使用ts时，可以使用 DockLayoutInterface 来获得代码提示
+const dockLayout = ref<DockLayoutInterface>();
+```
+###### `getSaveData() : IDockGrid`
+
+说明：
+
+获取当前界面网格布局数据
+
+返回值：
+
+界面网格布局数据
+
+###### `setData(data: IDockGrid) : void`
+
+说明：
+
+设置界面网格布局数据
+
+| 参数 | 描述 |
+| :----: | :----: |
+| data | 网格数据 |
+
+###### `updatePanel(panel: IDockPanel) : void`
+
+说明：
+
+更新面板实例的属性
+
+| 参数 | 描述 |
+| :----: | :----: |
+| panel | 面板 |
+
+###### `addPanel(panel: IDockPanel, insertTo?: string|DockData) : void`
+
+说明：
+
+向容器内插入面板。
+
+* 注意：如果面板key已经插入当前容器，并且 `insertTo` 不为空，则会进行移动此面板至操作，新panel属性不会变化，需要手动调用 `updatePanel` 进行更新属性操作。
+* 注意：如果 `insertTo` 不为空，则它的网格容器必须先存在，否则会添加失败。
+* panel.key 不可为空。
+
+| 参数 | 描述 |
+| :----: | :----: |
+| panel | 面板 |
+| insertTo | 将面板插入指定名称的网格，为空则插入至顶级网格 |
+
+###### `addPanels(panels: IDockPanel[], insertTo?: string|DockData) : void`
+
+说明：
+
+向容器内插入面板。同 `addPanel`，只不过此函数一次性添加多个面板。
+
+| 参数 | 描述 |
+| :----: | :----: |
+| panels | 面板数组 |
+| insertTo | 将面板插入指定名称的网格，为空则插入至顶级网格 |
+
+###### `removePanel(key: string) : void`
+
+说明：
+
+移除指定的面板
+
+| 参数 | 描述 |
+| :----: | :----: |
+| key | 面板唯一Key |
+
+###### `removePanels(keys: string[]) : void`
+
+说明：
+
+移除多个指定的面板
+
+| 参数 | 描述 |
+| :----: | :----: |
+| keys | 面板唯一Key |
+
+###### `activePanel(key: string) : void`
+
+说明：
+
+激活指定的面板
+
+| 参数 | 描述 |
+| :----: | :----: |
+| key | 面板唯一Key |
 
 ## 支持
 

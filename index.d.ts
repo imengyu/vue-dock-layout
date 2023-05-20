@@ -1,14 +1,13 @@
-import DockLayout from './src/DockLayout.vue'
-import DockPanelDefaultTab from './src/DockPanelDefaultTab.vue'
-import DockPanelHost from './src/DockPanelHost.vue'
-import DockSplit from './src/DockSplit.vue'
+import DockLayout from './dist/DockLayout.vue'
+import DockPanelDefaultTab from './dist/DockPanelDefaultTab.vue'
+import DockPanelHost from './dist/DockPanelHost.vue'
+import DockSplit from './dist/DockSplit.vue'
 
 declare module 'vue-dock-layout' {
 }
 
-
-export * from './src/DockHostData'
-export * from './src/DockLayoutData'
+export * from './dist/DockHostData'
+export * from './dist/DockLayoutData'
 
 export {
   DockLayout,

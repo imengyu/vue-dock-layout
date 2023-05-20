@@ -103,6 +103,19 @@ export interface IDockGrid {
  */
 export type DockDirection = 'vertical' | 'horizontal' | 'unknow';
 
+/**
+ * tabItemRender 插槽数据定义
+ */
+export interface DockTabItemRenderData {
+  dockData: DockData, 
+  panel: DockPanel, 
+  index: number, 
+  onTabItemMouseDown: (e: MouseEvent, item: DockPanel) => void, 
+  onTabItemDragStart: (ev: DragEvent, item: DockPanel) => void, 
+  onTabItemDragEnd: (ev: DragEvent) => void, 
+  onTabItemClose: (panel: DockPanel) => void, 
+}
+
 export function getTargetGridSize(nowLen: number) : number {
   if (nowLen === 0) 
     return 100;
@@ -447,7 +460,7 @@ export interface DockLayoutInterface {
    */
   removePanel: (key: string) => void;
   /**
-   * 移除指定的面板
+   * 移除多个指定的面板
    * @public
    * @param keys 面板唯一Key
    */
