@@ -196,7 +196,7 @@ This slot is used to render the backplane displayed when the grid has no content
 </DockLayout>
 ```
 
-## API 参考
+## API reference
 
 DockLayout is the main container for layout components.
 

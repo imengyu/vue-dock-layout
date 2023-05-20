@@ -12,3 +12,5 @@ export {
   DockPanelHost,
   DockPanelDefaultTab,
 }
+
+export default DockLayout;
