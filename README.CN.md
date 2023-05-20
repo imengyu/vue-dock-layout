@@ -1,352 +1,210 @@
+vue-dock-layout
+---
 
-# vue3-context-menu
+一个Vue3的可拖拽网格布局组件(类似Visual studio)
 
-一个使用 Vue3 制作的简洁美观简单的右键菜单组件
-
-![截图](https://raw.githubusercontent.com/imengyu/vue3-context-menu/main/screenshot/first.png)
+![Screenshot](./demo.jpg)
 
 ---
 
-[查看在线演示](https://imengyu.top/pages/vue3-context-menu-demo/)
+[查看文档](https://imengyu.top/pages/vue-dock-layout-doc/zh)
+
+[查看在线示例](https://imengyu.top/pages/vue-dock-layout-demo/)
+
+> **本项目目前还处于早期发布阶段，可能会存在不少问题，如果遇到问题，欢迎在 [Github](https://github.com/imengyu/vue-dock-layout/issues) 提出 Issue，我会尽量为你解决！**
 
 ## 特性
 
-* 简洁易用，体积小
-* 提供组件模式和函数模式，调用方便
+* 体积小，易用
 * 可自定义
 
-### ❗ 重大升级
+### 安装
 
-版本 1.1.0 做了很大升级，可能会存在与之前版本不兼容的情况，如果出现问题，请安装 1.0.9 版本。
-
-## 安装
-
-```shell
-npm install -save @imengyu/vue3-context-menu
+```
+npm install -save @imengyu/vue-dock-layout
 ```
 
-## 使用
+## 使用方法
 
-使用前建议您查看 [examples](examples/) 源码，它提供了多种详细的使用方法，可能会对您的使用很有帮助 😀.
+### 先导入
 
-### 导入组件
-
-```js
-import '@imengyu/vue3-context-menu/lib/vue3-context-menu.css'
-import ContextMenu from '@imengyu/vue3-context-menu'
-
-createApp(App).use(ContextMenu)     
+```ts
+import { DockLayout, DockLayoutInterface } from '@imengyu/vue-dock-layout';   
 ```
 
-### 显示菜单
+### 制作布局
 
-显示菜单有两种方式：
+要使用 vue-dock-layout ，你需要先在您的界面中添加一个容器组件，这是您的应用的内容承载区域。
 
-第一种是函数模式，可以使用 `this.$contextmenu` 或者 `showContextMenu` 全局函数，通过菜单数据显示一个右键菜单：
+```html
+<template>
+  <DockLayout ref="dockLayout" class="full">
+    <template #panelRender="{ panel }">
+      <template v-if="panel.key==='panel1'">
+        <h1>Tab Content</h1>
+        <span>This is first tab</span>
+      </template>
+      <template v-else-if="panel.key==='panel2'">
+        <h1>Tab Content</h1>
+        <span>This is second tab</span>
+      </template>
+      <template v-else-if="panel.key==='panel3'">
+        <h1>Tab Content</h1>
+        <span>This is third tab</span>
+        <img src="https://imengyu.top/assets/images/test/1.jpg" />
+      </template>
+    </template>
+  </DockLayout>
+</template>
+```
 
-```js
-import ContextMenu from '@imengyu/vue3-context-menu'
+布局组件的布局是以网格为布局方式的，每个分割区域为一个网格，网格中嵌入您的自定义内容。
 
-onContextMenu(e : MouseEvent) {
-  //prevent the browser's default menu
-  e.preventDefault();
-  //shou your menu
-  this.$contextmenu({
-    x: e.x,
-    y: e.y,
-    items: [
-      { 
-        label: "A menu item", 
-        onClick: () => {
-          alert("You click a menu item");
-        }
+组件提供了一些接口，允许您以编程方式快速设置界面布局：
+
+```ts
+const dockLayout = ref<DockLayoutInterface>();
+
+onMounted(() => {
+  nextTick(() => {
+    //这里先设置界面布局
+    //这里先添加了一个横向布局，中有三个区域，left/center/right，宽度占比为20%：60%：20%
+    //然后left区域又被分割为了leftA/leftB两个区域，宽度为50%：50%
+    dockLayout.value?.setData({
+      name: 'root',
+      size: 0,
+      grids: [
+        {
+          size: 20,
+          name: 'left',
+          grids: [
+            {
+              size: 50,
+              name: 'leftA',
+            },
+            {
+              size: 50,
+              name: 'leftB',
+            },
+          ]
+        },
+        {
+          size: 60,
+          name: 'center',
+          //这里设置了中心区域没有面板时不会被自动移除
+          alwaysVisible: true,
+        },
+        {
+          size: 20,
+          name: 'right',
+        },
+      ],
+    });
+    //下方代码向面板添加内容窗口
+    //每个内容窗口以key作为标识符，在 DockLayout 的 panelRender 插槽中可以从 panel 参数中读取。
+    dockLayout.value?.addPanels([
+      {
+        key: 'panel1',
+        title: 'panel1',
       },
-      { 
-        label: "A submenu", 
-        children: [
-          { label: "Item1" },
-          { label: "Item2" },
-          { label: "Item3" },
-        ]
+      {
+        key: 'panel2',
+        title: 'panel2',
       },
-    ]
-  });
-
-  //这个函数与 this.$contextmenu 一致
-  ContextMenu.showContextMenu({ ... }); 
-}
+    ], 'leftA');
+    dockLayout.value?.addPanels([
+      {
+        key: 'panel3',
+        title: 'panel3',
+      },
+    ], 'leftB');
+  })
+});
 ```
 
-第二种是组件模式，可以使用vue组件显示菜单：
+以上示例可以在 [在线示例](https://imengyu.top/pages/vue-dock-layout-demo/) 中的第一个示例找到。
 
-```html
-<context-menu
-  v-model:show="show"
-  :options="optionsComopnent"
->
-  <context-menu-item label="Simple item" @click="onMenuClick(1)" />
-  <context-menu-sperator /><!--use this to add sperator-->
-  <context-menu-group label="Menu with child">
-    <context-menu-item label="Item1" @click="onMenuClick(2)" />
-    <context-menu-item label="Item2" @click="onMenuClick(3)" />
-    <context-menu-group label="Child with v-for 50">
-      <context-menu-item v-for="index of 50" :key="index" :label="'Item3-'+index" @click="onLoopMenuClick(index)" />
-    </context-menu-group>
-  </context-menu-group>
-</context-menu>
-```
+用户可以自定义拖拽界面。因此在程序离开时，如果您需要保存用户的自定义设置，可读取当前网格布局数据，
+在下次程序加载时设置到组件中。
 
 ```js
-data() {
-  return {
-    show: false,
-    //For component
-    optionsComopnent: {
-      zIndex: 3,
-      minWidth: 230,
-      x: 500,
-      y: 200
-    },
-  }
-},
-methods: {
-  onButtonClick(e : MouseEvent) {
-    //显示组件菜单
-    this.show = true;
-    this.options.x = e.x;
-    this.options.y = e.y;
-  },
-}
+onBeforeUnmount(() => {
+  const layoutData = dockLayout.value?.getSaveData()
+  //Save layoutData to anywhere...
+
+  //Next time, load and set to dockLayout
+  dockLayout.value?.setData(layoutData);
+})
 ```
 
-## 菜单图标
+### 自定义
 
-菜单组件不提供任何图标，如果您想添加图标，推荐使用 [iconfont](http://iconfont.cn) 图标库，导入后填写 MenuItem 的 icon 属性，即可在菜单项前面显示图标。
+#### 主题
 
-*默认使用 `<i>` 元素来显示图标。*
-
-你也可以通过菜单的插槽来完全自定义渲染图标，如：
-
-在组件模式自定义图标：
+组件默认提供了 亮色（`light`）与 暗色 （`dark`）两个主题供您使用，主题可以使用 `DockLayout` 组件的 `theme` 属性指定。
 
 ```html
-<context-menu-item label="Item with custom icon slot" @click="alertContextMenuItemClicked('Item3')">
-  <template #icon>
-    <img src="https://imengyu.top/assets/images/test/icon.png" style="width:20px;height:20px" />
-  </template>
-</context-menu-item>
-```
-
-自定义整个菜单的图标：
-
-```html
-<context-menu
-  v-model:show="show"
-  :options="options"
->
-  <template #itemIconRender={ icon }>
-    <!--icon就是属性中传入的icon属性，你可以在这里使用自己的图标组件-->
-    <img :src="icon" style="width:20px;height:20px" />
-  </template>
+<DockLayout ref="dockLayout" theme="light">
   ...
-</context-menu>
+</DockLayout>
 ```
 
-在函数模式自定义图标：
+两个主题效果如下图所示：
 
-```js
-import { h } from 'vue';
+|light|dark|
+|---|---|
+|![Screenshot](./demo.light.jpg)|![Screenshot](./demo.jpg)|
 
-{ 
-  label: "Item with custom icon render",
-  icon: h('img', {
-    src: 'https://imengyu.top/assets/images/test/icon.png',
-    style: {
-      width: '20px',
-      height: '20px',
-    }
-  }),
-  divided: true, 
-},
+#### 自定义渲染
+
+组件提供了一些位置的渲染插槽，你可以进行自定义渲染。
+
+具体示例和源码请[查看在线示例](https://imengyu.top/pages/vue-dock-layout-demo/#/DockLayoutThemeTest)
+
+##### tabItemRender
+
+用于面板标题的自定义渲染。
+
+```vue
+<DockLayout ref="dockLayout" class="full">
+  <template #tabItemRender="{ dockData, panel, onTabItemMouseDown, onTabItemDragStart, onTabItemDragEnd }">
+    <div
+      :class="'my-custom-tab drag-target-tab ' + (dockData.activeTab === panel ? 'active' : '')"
+      draggable="true" 
+      @mousedown="onTabItemMouseDown($event, panel)"
+      @dragstart="onTabItemDragStart($event, panel)"
+      @dragend="onTabItemDragEnd($event)"
+    >
+      {{ panel.title }}
+    </div>
+  </template>
+</DockLayout>
 ```
 
-## 自定义样式
+##### emptyPanel
 
-如果觉得菜单样式不好看，可以重写css样式，所有的css样式定义都在 `/src/ContextSubMenu.vue` 中。你可以将所有样式复制出来，按需修改，存放在你的文件中。然后在导入的地方覆盖默认样式：
+用于渲染面板没有内容窗口时显示的底板。
 
-```js
-import '@imengyu/vue3-context-menu/lib/vue3-context-menu.css'
-import '你的样式css文件路径.css'
+```vue
+<DockLayout ref="dockLayout" class="full">
+  <template #emptyPanel="{ dockData }">
+    <div>
+      <h1>{{dockData.name}}</h1>
+      <h1>This grid won't be removed from layout even when last Tab is closed</h1>
+    </div>
+  </template>
+</DockLayout>
 ```
 
-## 自定义渲染
+## 支持
 
-菜单提供了一些插槽，允许你自定义渲染某些部分，具体您可以参考案例源码 [examples/views/BasicCustomize.vue](examples/views/BasicCustomize.vue) [examples/views/ComponentCustomize.vue](examples/views/ComponentCustomize.vue)。
-
-## API 参考
-
-### 组件模式：组件属性与说明
-
-#### ContextMenu
-
-菜单主体组件。
-
-##### Props
-
-| 属性 | 描述 | 类型 | 默认值 |
-| :----: | :----: | :----: | :----: |
-| show(v-model) | 是否显示菜单 | `boolean` | — |
-| options | 菜单相关定义 | `MenuOptions` | — |
-
-##### Events
-
-| 事件名 | 描述 | 参数 |
-| :----: | :----: | :----: |
-| close | 菜单关闭时触发此事件 | - |
-
-##### Slots
-
-| 插槽名 | 描述 | 参数 |
-| :----: | :----: | :----: |
-| itemRender | 当前菜单全局条目渲染插槽 | MenuItemRenderData |
-| itemIconRender | 当前菜单全局图标渲染插槽 | MenuItemRenderData |
-| itemLabelRender | 当前菜单全局文字渲染插槽 | MenuItemRenderData |
-| itemRightArrowRender | 当前菜单全局右侧箭头渲染插槽 | MenuItemRenderData |
-| speratorRender | 当前菜单分隔符渲染插槽 | - |
-
-##### MenuItemRenderData 结构
-
-| 属性名 | 描述 | 类型 |
-| :----: | :----: | :----: |
-| theme | 菜单主题 | `'light' 'dark'` |
-| onClick | 自定义元素的点击事件回调，它用于菜单内部事件处理，当自定义渲染时，请回调此函数，否则菜单无法正常响应事件 | - |
-| onMouseEnter | 自定义元素的鼠标移入事件回调，它用于菜单内部事件处理，当自定义渲染时，请回调此函数，否则菜单无法正常响应事件 | - |
-| ... | 其他参数与 `MenuItem` 一致 | - |
-
----
-
-#### ContextMenuItem
-
-菜单条目组件。
-
-##### Props
-
-| 属性 | 描述 | 类型 | 默认值 |
-| :----: | :----: | :----: | :----: |
-| label | 菜单项名称 | `string` | — |
-| icon | 菜单项图标 | `string` | — |
-| disabled | 是否禁用菜单项 | `boolean` | `false` |
-| clickableWhenHasChildren | 指定当本菜单下有子菜单时，点击当前菜单是否触发点击事件 | `boolean` | `false` |
-| clickClose | 点击当前菜单项是否自动关闭整个菜单 | `boolean` | `true` |
-| customClass | 自定义子菜单class | `string` | — |
-| onClick | 菜单项点击事件 | `Function()` | — |
-
-##### Slots
-
-| 插槽名 | 描述 | 参数 |
-| :----: | :----: | :----: |
-| default | 当前条目整体渲染插槽 | - |
-| icon | 图标渲染插槽 | - |
-| label | 文字渲染插槽 | - |
-| rightArrow | 右侧箭头渲染插槽 | - |
-
-##### Click
-
-| 事件名 | 描述 | 参数 |
-| :----: | :----: | :----: |
-| click | 点击菜单时触发此事件 | - |
-
----
-
-#### ContextMenuGroup
-
-子菜单组件。
-
-##### Props
-
-| 属性 | 描述 | 类型 | 默认值 |
-| :----: | :----: | :----: | :----: |
-| label | 菜单项名称 | `string` | — |
-| icon | 菜单项图标 | `string` | — |
-| disabled | 是否禁用菜单项 | `boolean` | `false` |
-| clickableWhenHasChildren | 指定当本菜单下有子菜单时，点击当前菜单是否触发点击事件 | `boolean` | `false` |
-| adjustSubMenuPosition | 是否在子菜单超出屏幕后进行自动调整 | `boolean` | `true` |
-| clickClose | 点击当前菜单项是否自动关闭整个菜单 | `boolean` | `true` |
-| customClass | 自定义子菜单class | `string` | — |
-| minWidth | 子菜单最小宽度 | `number` | `100` |
-| maxWidth | 子菜单最大宽度 | `number` | `600` |
-| onClick | 菜单项点击事件 | `Function()` | — |
-
-##### Slots
-
-| 插槽名 | 描述 | 参数 |
-| :----: | :----: | :----: |
-| default | 子菜单渲染插槽 | - |
-
----
-
-#### ContextMenuSperator
-
-菜单分隔符组件。
-
----
-
-### 函数模式：参数说明
-
-#### 全局函数
-
-* `ContextMenu.showContextMenu(options: MenuOptions, customSlots?: Record<string, Slot>)`
-
-  显示菜单.
-
-  | 参数 | 说明 |
-  | :----: | :----: |
-  | options | 菜单的数据 |
-  | customSlots | 这些插槽允许您自定义当前菜单的样式，这些插槽的名称与 [组件模式](#ContextMenu) 中的插槽名称相同 |
-
-* `ContextMenu.closeContextMenu()`
-
-  手动关闭当前打开的菜单.
-
-* `this.$contextmenu`
-
-  与 `ContextMenu.showContextMenu` 相同，但此函数注册到 Vue 全局属性中，可以在Vue实例中直接使用。
-
-#### MenuOptions
-
-| 属性 | 描述 | 类型 | 可选值 | 默认值 |
-| :----: | :----: | :----: | :----: | :----: |
-| items | 菜单结构信息 | `MenuItem[]` | — | — |
-| x | 菜单显示X坐标 | `number` | — | `0` |
-| y | 菜单显示Y坐标 | `number` | — | `0` |
-| xOffset | 子菜单与父菜单X的偏移 | `number` | — | `0` |
-| yOffset | 子菜单与父菜单Y的偏移 | `number` | — | `0` |
-| iconFontClass | 自定义图标字体类名 | `string` | — | `iconfont` |
-| zIndex | 菜单的`z-index` | `number` | — | `2` |
-| customClass | 自定义菜单类名 | `string` | — | — |
-| minWidth | 主菜单最小宽度 | `number` | — | `100` |
-| maxWidth | 主菜单最大宽度 | `number` | — | `600` |
-| theme | 菜单的主题 | `string` | `'light' 'dark'` | `light` |
-| closeWhenScroll | 用户滚动鼠标时是否关闭菜单 | `boolean` | - | `true` |
-
-#### MenuItem
-
-| 属性 | 描述 | 类型 | 可选值 | 默认值 |
-| :----: | :----: | :----: | :----: | :----: |
-| label | 菜单项名称，可传入VNode | `string` or `VNode` or `((label: string) => VNode)` | — | — |
-| icon | 菜单项图标，可传入VNode | `string` or `VNode` or `((icon: string) => VNode)` | — | — |
-| disabled | 是否禁用菜单项 | `boolean` | — | `false` |
-| adjustSubMenuPosition | 是否在子菜单超出屏幕后进行自动调整 | `boolean` | — | `true` |
-| clickableWhenHasChildren | 指定当本菜单下有子菜单时，点击当前菜单是否触发点击事件 | `boolean` | — | `false` |
-| clickClose | 点击当前菜单项是否自动关闭整个菜单 | `boolean` | — | `true` |
-| divided | 是否显示分割线 | `boolean` | — | `false` |
-| customClass | 自定义子菜单class | `string` | — | — |
-| minWidth | 子菜单最小宽度 | `number` | — | `100` |
-| maxWidth | 子菜单最大宽度 | `number` | — | `600` |
-| onClick | 菜单项点击事件 | `Function()` | — | — |
-| customRender | 菜单项整体自定义渲染回调 | `VNode` or `((item: MenuItemRenderData) => VNode)` | — | — |
-| children | 子菜单结构信息 | `MenuItem[]` | — | — |
+作者开发不易，如果这个项目对您有帮助，希望你可以帮我点个 ⭐ ，这将是对我极大的鼓励。谢谢啦 (●'◡'●)
 
 ## Changelog
 
-[查看](./CHANGELOG.md)
+[Changelog](./CHANGELOG.md)
+
+## 作者的其他项目
+
+* [vue3-context-menu 一个简洁美观简单的Vue3右键菜单组件](https://github.com/imengyu/vue3-context-menu/)
+* [vue-dynamic-form 一款Vue3动态表单渲染库](https://github.com/imengyu/vue-dynamic-form)

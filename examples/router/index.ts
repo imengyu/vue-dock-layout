@@ -13,7 +13,7 @@ const routes: Array<RouteRecordRaw> = [
     component: HomeView,
     children: [
       {
-        path: 'DockLayoutBaseTest',
+        path: '',
         name: 'DockLayoutBaseTest',
         component: DockLayoutBaseTest
       },

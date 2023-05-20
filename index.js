@@ -1,6 +1,14 @@
-export * from './src/DockLayout.vue'
+import DockLayout from './src/DockLayout.vue'
+import DockPanelDefaultTab from './src/DockPanelDefaultTab.vue'
+import DockPanelHost from './src/DockPanelHost.vue'
+import DockSplit from './src/DockSplit.vue'
+
 export * from './src/DockHostData'
 export * from './src/DockLayoutData'
-export * from './src/DockPanelDefaultTab.vue'
-export * from './src/DockPanelHost.vue'
-export * from './src/DockSplit.vue'
+
+export {
+  DockLayout,
+  DockSplit,
+  DockPanelHost,
+  DockPanelDefaultTab,
+}
