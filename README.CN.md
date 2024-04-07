@@ -9,7 +9,7 @@ vue-dock-layout
 
 [查看在线示例](https://imengyu.top/pages/vue-dock-layout-demo/)
 
-> **本项目目前还处于早期发布阶段，可能会存在不少问题，如果遇到问题，欢迎在 [Github](https://github.com/imengyu/vue-dock-layout/issues) 提出 Issue，我会尽量为你解决！**
+**注：此项目已不再开发中。我们建议使用[vue-code-layout](https://github.com/imengyu/vue-code-layout)**
 
 ## 特性
 
