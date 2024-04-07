@@ -7,6 +7,8 @@ A dock layout component like `visual studio` for Vue3
 
 [中文说明](https://github.com/imengyu/vue-dock-layout/blob/main/README.CN.md)
 
+**Note: This project is no longer under development. We recommend using [vue-code-layout](https://github.com/imengyu/vue-code-layout).**
+
 ---
 
 [Click here View online Demo](https://imengyu.top/pages/vue-dock-layout-demo/)
